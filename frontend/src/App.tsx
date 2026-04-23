@@ -6,6 +6,7 @@ import {
   BarChart3,
   Database,
   FileUp,
+  Info,
   LayoutDashboard,
   Pencil,
   PlusCircle,
@@ -404,9 +405,23 @@ function DashboardPage({
         ) : null}
 
         <div className="grid two">
-          <ChartPanel title="Severity" data={analytics?.severity_counts ?? []} barKey="value" />
-          <ChartPanel title="Status" data={analytics?.status_counts ?? []} barKey="value" />
+          <ChartPanel
+            title="Severity"
+            helpText="Shows how many parsed records fall into each severity level so you can quickly spot warning, error, and alarm-heavy datasets."
+            data={analytics?.severity_counts ?? []}
+            barKey="value"
+          />
+          <ChartPanel
+            title="Status"
+            helpText="Shows how many records were mapped into each status or state, which helps you see the overall operating pattern of the dataset."
+            data={analytics?.status_counts ?? []}
+            barKey="value"
+          />
         </div>
+
+        <HumanReadableAnalysisPanel dataset={activeDataset} analytics={analytics} />
+
+        <DatasetSummaryPanel dataset={activeDataset} analytics={analytics} />
 
         <section className="panel">
           <div className="panelHeader spread">
@@ -717,12 +732,30 @@ function Stats({ dataset, analytics }: { dataset: Dataset | null; analytics?: An
   );
 }
 
-function ChartPanel({ title, data, barKey }: { title: string; data: { name: string; value: number }[]; barKey: string }) {
+function ChartPanel({
+  title,
+  helpText,
+  data,
+  barKey
+}: {
+  title: string;
+  helpText: string;
+  data: { name: string; value: number }[];
+  barKey: string;
+}) {
   return (
     <section className="panel">
       <div className="panelHeader">
         <BarChart3 size={18} />
         <h2>{title}</h2>
+        <div className="infoHint">
+          <button type="button" className="infoButton" aria-label={`${title} chart summary`}>
+            <Info size={14} />
+          </button>
+          <div className="tooltipCard" role="tooltip">
+            {helpText}
+          </div>
+        </div>
       </div>
       <div className="chart">
         <ResponsiveContainer width="100%" height="100%">
@@ -737,6 +770,109 @@ function ChartPanel({ title, data, barKey }: { title: string; data: { name: stri
       </div>
     </section>
   );
+}
+
+function HumanReadableAnalysisPanel({ dataset, analytics }: { dataset: Dataset | null; analytics?: Analytics }) {
+  const analysis = buildHumanReadableAnalysis(dataset, analytics);
+
+  return (
+    <section className="panel analysisPanel">
+      <div className="panelHeader">
+        <BarChart3 size={18} />
+        <h2>Analysis</h2>
+      </div>
+      {dataset ? <p className="analysisCopy">{analysis}</p> : <p className="empty">Select a dataset to see an analysis.</p>}
+    </section>
+  );
+}
+
+function DatasetSummaryPanel({ dataset, analytics }: { dataset: Dataset | null; analytics?: Analytics }) {
+  const topSeverity = analytics?.severity_counts?.[0];
+  const topStatus = analytics?.status_counts?.[0];
+  const topTool = analytics?.tool_counts?.find((item) => item.name !== "UNKNOWN") ?? analytics?.tool_counts?.[0];
+  const timelinePoints = analytics?.timeline?.length ?? 0;
+  const createdAt = dataset?.created_at ? new Date(dataset.created_at).toLocaleString() : null;
+
+  return (
+    <section className="panel summaryPanel">
+      <div className="panelHeader">
+        <Database size={18} />
+        <h2>Dataset Summary</h2>
+      </div>
+      {dataset ? (
+        <div className="summaryGrid">
+          <div className="summaryIntro">
+            <strong>{dataset.file_name}</strong>
+            <p>
+              This dataset was parsed as {dataset.detected_format} with {dataset.record_count} records and
+              a confidence score of {Math.round(dataset.confidence * 100)}%.
+            </p>
+          </div>
+          <div className="summaryFacts">
+            <div className="summaryFact">
+              <span>Most common severity</span>
+              <strong>{topSeverity ? `${topSeverity.name} (${topSeverity.value})` : "No severity values found"}</strong>
+            </div>
+            <div className="summaryFact">
+              <span>Most common status</span>
+              <strong>{topStatus ? `${topStatus.name} (${topStatus.value})` : "No status values found"}</strong>
+            </div>
+            <div className="summaryFact">
+              <span>Primary tool</span>
+              <strong>{topTool ? `${topTool.name} (${topTool.value})` : "No tool IDs found"}</strong>
+            </div>
+            <div className="summaryFact">
+              <span>Coverage</span>
+              <strong>
+                {String(analytics?.totals?.unknownFieldCount ?? 0)} unknown field types across {timelinePoints} timeline buckets
+              </strong>
+            </div>
+          </div>
+          <p className="muted summaryMeta">
+            {createdAt ? `Uploaded ${createdAt}. ` : ""}
+            Use the explorer below to inspect individual records and the charts above to compare distribution across the dataset.
+          </p>
+        </div>
+      ) : (
+        <p className="empty">Select a dataset to see a summary.</p>
+      )}
+    </section>
+  );
+}
+
+function buildHumanReadableAnalysis(dataset: Dataset | null, analytics?: Analytics) {
+  if (!dataset) return "";
+
+  const recordCount = dataset.record_count;
+  const confidence = Math.round(dataset.confidence * 100);
+  const topSeverity = analytics?.severity_counts?.[0];
+  const topStatus = analytics?.status_counts?.[0];
+  const topTool = analytics?.tool_counts?.find((item) => item.name !== "UNKNOWN") ?? analytics?.tool_counts?.[0];
+  const unknownFieldCount = Number(analytics?.totals?.unknownFieldCount ?? 0);
+  const metricCount = analytics?.metric_ranges?.length ?? 0;
+  const timelineBuckets = analytics?.timeline?.length ?? 0;
+  const warningCount =
+    (analytics?.severity_counts ?? [])
+      .filter((item) => ["WARN", "WARNING", "ERROR", "CRITICAL", "ALARM"].includes(item.name.toUpperCase()))
+      .reduce((sum, item) => sum + item.value, 0) ?? 0;
+  const warningShare = recordCount > 0 ? Math.round((warningCount / recordCount) * 100) : 0;
+
+  const parts = [
+    `${dataset.file_name} was parsed as ${dataset.detected_format} with ${recordCount} records at ${confidence}% confidence.`,
+    topTool ? `Most activity is associated with ${topTool.name}, which appears in ${topTool.value} records.` : null,
+    topStatus ? `The dominant status is ${topStatus.name} with ${topStatus.value} occurrences.` : "No clear status pattern was detected.",
+    topSeverity
+      ? `The leading severity is ${topSeverity.name} with ${topSeverity.value} records, and ${warningShare}% of all records fall into warn-or-higher severities.`
+      : "No severity distribution was identified in the current dataset.",
+    metricCount > 0
+      ? `${metricCount} metric series and ${timelineBuckets} timeline buckets were derived, which suggests the dataset is structured enough for trend analysis.`
+      : "Very few structured metrics were extracted, so this dataset may rely more on raw text than numeric telemetry.",
+    unknownFieldCount > 0
+      ? `${unknownFieldCount} unknown field types are still being preserved, so there is room to improve mappings and make future parses richer.`
+      : "There are no unknown field types in this dataset, which suggests the current mappings already cover it well."
+  ].filter(Boolean);
+
+  return parts.join(" ");
 }
 
 function RecordTable({ records }: { records: LogRecord[] }) {

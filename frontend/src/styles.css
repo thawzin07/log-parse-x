@@ -187,6 +187,10 @@ h2 {
   margin-bottom: 14px;
 }
 
+.panelHeader h2 {
+  flex: 0 1 auto;
+}
+
 .spread {
   justify-content: space-between;
   gap: 16px;
@@ -276,6 +280,113 @@ h2 {
 .chart {
   width: 100%;
   height: 260px;
+}
+
+.infoHint {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #c8d6d2;
+  border-radius: 999px;
+  background: #f4faf9;
+  color: #2a6d67;
+  cursor: help;
+}
+
+.tooltipCard {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 5;
+  width: min(280px, 70vw);
+  padding: 10px 12px;
+  border: 1px solid #d7dfdc;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 48px rgba(23, 32, 31, 0.12);
+  color: #42524f;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.infoHint:hover .tooltipCard,
+.infoHint:focus-within .tooltipCard {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.summaryPanel {
+  display: grid;
+  gap: 12px;
+}
+
+.analysisPanel {
+  display: grid;
+  gap: 8px;
+}
+
+.analysisCopy {
+  margin-bottom: 0;
+  color: #344542;
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.summaryIntro {
+  display: grid;
+  gap: 6px;
+}
+
+.summaryIntro strong {
+  font-size: 1.05rem;
+}
+
+.summaryIntro p,
+.summaryMeta {
+  margin-bottom: 0;
+}
+
+.summaryFacts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.summaryFact {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #e0e8e5;
+  border-radius: 8px;
+  background: #fbfcfb;
+}
+
+.summaryFact span {
+  color: #65736f;
+  font-size: 0.82rem;
+}
+
+.summaryFact strong {
+  overflow-wrap: anywhere;
+  font-size: 0.95rem;
 }
 
 .searchInput,
@@ -503,7 +614,8 @@ th {
   .grid.two,
   .schemaForm,
   .mappingControls,
-  .schemaCards {
+  .schemaCards,
+  .summaryFacts {
     grid-template-columns: 1fr;
   }
 
