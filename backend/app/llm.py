@@ -20,7 +20,7 @@ def load_prompt(name: str) -> str:
 
 
 async def infer_schema(sample: str, detected_format: str | None = None) -> tuple[str, dict[str, Any]]:
-    provider = os.getenv("LLM_PROVIDER", "ollama").lower()
+    provider = os.getenv("LLM_PROVIDER", "openai").lower()
     if provider in {"", "disabled", "none"}:
         raise LLMUnavailable("LLM provider is disabled.")
 
@@ -62,7 +62,7 @@ async def _openai(prompt: str) -> dict[str, Any]:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise LLMUnavailable("OPENAI_API_KEY is not configured.")
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    model = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
     async with httpx.AsyncClient(timeout=90) as client:
         response = await client.post(
             "https://api.openai.com/v1/chat/completions",

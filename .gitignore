@@ -5,11 +5,16 @@ __pycache__/
 *.py[cod]
 .venv/
 .pytest_cache/
+.pip-cache/
+.tmp/
+*.db
+*.log
 
 # Node
 node_modules/
 dist/
 .vite/
+.npm-cache/
 
 # OS/editor
 .DS_Store

@@ -89,11 +89,11 @@ All variables used by the app and Docker Compose are listed in `.env.example`.
 | `DATABASE_URL` | `postgresql+psycopg2://logparsex:logparsex@postgres:5432/logparsex` | Backend | SQLAlchemy connection string used inside Docker. |
 | `CORS_ORIGINS` | `http://localhost:5173,http://localhost:3000` | Backend | Browser origins allowed to call the API. |
 | `VITE_API_URL` | `http://localhost:8000` | Frontend | API base URL used by the dashboard in the browser. |
-| `LLM_PROVIDER` | `ollama` | Backend | LLM provider for schema inference: `ollama`, `openai`, `gemini`, or `none`. |
+| `LLM_PROVIDER` | `openai` | Backend | LLM provider for schema inference: `openai`, `ollama`, `gemini`, or `none`. |
 | `OLLAMA_URL` | `http://ollama:11434` | Backend | Internal Ollama URL when running through Compose. |
 | `OLLAMA_MODEL` | `llama3.1:8b` | Backend | Ollama model name. |
 | `OPENAI_API_KEY` | empty | Backend | OpenAI API key when `LLM_PROVIDER=openai`. |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Backend | OpenAI model for schema inference. |
+| `OPENAI_MODEL` | `gpt-5.4-mini` | Backend | OpenAI model for schema inference. |
 | `GEMINI_API_KEY` | empty | Backend | Gemini API key when `LLM_PROVIDER=gemini`. |
 | `GEMINI_MODEL` | `gemini-1.5-flash` | Backend | Gemini model for schema inference. |
 
@@ -113,20 +113,20 @@ Pull a model into the Ollama container:
 docker compose exec ollama ollama pull llama3.1:8b
 ```
 
-The backend defaults to:
+The backend defaults to OpenAI:
+
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-5.4-mini
+```
+
+Ollama can still be used for local LLM inference:
 
 ```env
 LLM_PROVIDER=ollama
 OLLAMA_URL=http://ollama:11434
 OLLAMA_MODEL=llama3.1:8b
-```
-
-Cloud providers are also wired:
-
-```env
-LLM_PROVIDER=openai
-OPENAI_API_KEY=...
-OPENAI_MODEL=gpt-4o-mini
 ```
 
 ```env
